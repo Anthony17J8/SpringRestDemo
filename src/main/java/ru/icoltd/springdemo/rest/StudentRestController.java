@@ -1,9 +1,8 @@
 package ru.icoltd.springdemo.rest;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import ru.icoltd.springdemo.entity.Student;
 
 import javax.annotation.PostConstruct;
@@ -35,6 +34,26 @@ public class StudentRestController {
     // define endpoint for '/students/{studentId} - return student at index
     @GetMapping("/students/{studentId}")
     public Student getStudent(@PathVariable int studentId) {
+
+        // check the student against the list size
+        if ((studentId >= theStudents.size()) || (studentId < 0)) {
+            throw new StudentNotFoundException("Student id not found - " + studentId);
+        }
         return theStudents.get(studentId);
+    }
+
+    // add an exception handler using @ExceptionHandler
+    @ExceptionHandler
+    public ResponseEntity<StudentErrorResponse> exceptionHandler(StudentNotFoundException exc) {
+
+        // create a StudentErrorResponse
+        StudentErrorResponse errorResponse = new StudentErrorResponse();
+
+        errorResponse.setStatus(HttpStatus.NOT_FOUND.value());
+        errorResponse.setMessage(exc.getMessage());
+        errorResponse.setTimeStamp(System.currentTimeMillis());
+
+        // return ResponseEntity
+        return new ResponseEntity<StudentErrorResponse>(errorResponse, HttpStatus.NOT_FOUND);
     }
 }
